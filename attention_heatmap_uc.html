@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UC Flare Risk — Attention Heatmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Syne:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:         #F2F0EB;
+  --surface:    #FFFFFF;
+  --surface2:   #ECEAE3;
+  --border:     rgba(0,0,0,0.08);
+  --border-md:  rgba(0,0,0,0.16);
+  --text:       #1A1816;
+  --text-2:     #5A5752;
+  --text-3:     #9A9790;
+  --font-disp:  'Instrument Serif', Georgia, serif;
+  --font-body:  'Syne', system-ui, sans-serif;
+  --font-mono:  'DM Mono', monospace;
+  --r:          8px;
+  --r-lg:       14px;
+  --coral-900:  #4A1B0C;
+  --coral-800:  #712B13;
+  --coral-600:  #993C1D;
+  --coral-400:  #D85A30;
+  --coral-200:  #F0997B;
+  --coral-100:  #F5C4B3;
+  --coral-50:   #FAECE7;
+  --amber-800:  #633806;
+  --amber-600:  #854F0B;
+  --amber-400:  #EF9F27;
+  --amber-200:  #FAC775;
+  --amber-50:   #FAEEDA;
+  --blue-800:   #0C447C;
+  --blue-600:   #185FA5;
+  --blue-400:   #378ADD;
+  --blue-100:   #B5D4F4;
+  --blue-50:    #E6F1FB;
+  --teal-800:   #085041;
+  --teal-600:   #0F6E56;
+  --teal-400:   #1D9E75;
+  --teal-50:    #E1F5EE;
+  --gray-300:   #B4B2A9;
+  --gray-100:   #D3D1C7;
+  --gray-50:    #F1EFE8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:         #100F0C;
+    --surface:    #1C1A16;
+    --surface2:   #272420;
+    --border:     rgba(255,255,255,0.10);
+    --border-md:  rgba(255,255,255,0.22);
+    --text:       #F0EDE6;
+    --text-2:     #C8C3B8;
+    --text-3:     #8A8578;
+    --coral-900:  #FAECE7;
+    --coral-800:  #F5C4B3;
+    --coral-600:  #F0997B;
+    --coral-400:  #D85A30;
+    --coral-200:  #993C1D;
+    --coral-100:  #712B13;
+    --coral-50:   #3A1208;
+    --amber-800:  #FAC775;
+    --amber-600:  #EF9F27;
+    --amber-400:  #BA7517;
+    --amber-200:  #854F0B;
+    --amber-50:   #301A02;
+    --blue-800:   #B5D4F4;
+    --blue-600:   #85B7EB;
+    --blue-400:   #378ADD;
+    --blue-100:   #185FA5;
+    --blue-50:    #042C53;
+    --teal-800:   #9FE1CB;
+    --teal-600:   #5DCAA5;
+    --teal-400:   #1D9E75;
+    --teal-50:    #04342C;
+    --gray-300:   #888780;
+    --gray-100:   #444441;
+    --gray-50:    #252320;
+  }
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── Page header ── */
+.page-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 1.5rem 2rem;
+}
+.header-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.header-left h1 {
+  font-family: var(--font-disp);
+  font-size: 28px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--text);
+  line-height: 1.15;
+  margin-bottom: 4px;
+}
+.header-left p { font-size: 13px; color: var(--text-2); }
+.model-tag {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+.model-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--blue-50);
+  color: var(--blue-600);
+  border: 0.5px solid var(--blue-100);
+}
+
+/* ── Patient bar ── */
+.patient-bar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0.65rem 2rem;
+}
+.patient-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.p-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.07em; }
+.p-chip {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 0.5px solid var(--border-md);
+  color: var(--text-2);
+  background: var(--surface2);
+}
+
+/* ── Main ── */
+.main {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 1.75rem 2rem 3rem;
+}
+
+/* ── Output card ── */
+.card {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 1.1rem 1.4rem;
+  margin-bottom: 1rem;
+}
+.sec-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-3);
+  margin-bottom: 0.5rem;
+}
+.output-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 50px;
+  background: var(--coral-50);
+  color: var(--coral-800);
+  border: 1.5px solid var(--coral-400);
+  margin-bottom: 6px;
+}
+.output-note { font-size: 12.5px; color: var(--text-2); line-height: 1.55; }
+
+/* ── Legend ── */
+.legend-strip {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.leg-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-2); }
+.leg-swatch { width: 24px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.leg-note { margin-left: auto; font-size: 11px; color: var(--text-3); }
+
+/* ── Heatmap ── */
+.heatmap-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.heatmap-table { min-width: 560px; width: 100%; border-collapse: separate; border-spacing: 3px; }
+.heatmap-table th {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-3);
+  text-align: center;
+  padding: 2px 0 6px;
+}
+.feat-label-th {
+  text-align: right !important;
+  padding-right: 10px !important;
+  width: 120px;
+  font-size: 11px;
+  color: var(--text-3);
+}
+.heatmap-table td {
+  height: 34px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s;
+  vertical-align: middle;
+}
+.heatmap-table td:hover { transform: scale(1.05); box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+.feat-label-td {
+  text-align: right !important;
+  padding-right: 10px !important;
+  font-family: var(--font-body) !important;
+  font-size: 11.5px !important;
+  color: var(--text-2) !important;
+  cursor: default !important;
+  background: transparent !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+.attn-td {
+  height: 20px !important;
+  font-size: 10px !important;
+  border-radius: 4px !important;
+  transition: transform 0.12s !important;
+}
+.divider-row td { height: 10px; background: transparent !important; cursor: default !important; }
+.attn-label-td {
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  font-family: var(--font-body) !important;
+  color: var(--text-3) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: default !important;
+  background: transparent !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+.col-selected { outline: 2px solid var(--blue-400); outline-offset: 1px; }
+
+/* ── Detail panel ── */
+.detail-panel {
+  border-left: 3px solid var(--coral-400);
+  border-radius: 0 var(--r) var(--r) 0;
+  background: var(--surface2);
+  padding: 0.85rem 1.1rem;
+  margin-top: 0.9rem;
+  animation: slideIn 0.2s ease;
+}
+@keyframes slideIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.detail-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+.detail-feats { display: flex; gap: 7px; flex-wrap: wrap; }
+.dfeat {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-family: var(--font-mono);
+}
+.d-high { background: var(--coral-50); color: var(--coral-800); }
+.d-med  { background: var(--amber-50); color: var(--amber-800); }
+.d-low  { background: var(--gray-50);  color: var(--text-3); border: 0.5px solid var(--border-md); }
+.detail-attn { margin-top: 8px; font-size: 12px; color: var(--text-2); }
+.detail-attn b { color: var(--text); font-weight: 500; }
+
+/* ── Trajectory chart ── */
+.traj-wrap {
+  position: relative;
+  height: 160px;
+  margin-top: 0.5rem;
+}
+.traj-wrap canvas { display: block; }
+
+/* ── Article 13 ── */
+.art13 {
+  border-left: 3px solid var(--blue-400);
+  background: var(--blue-50);
+  border-radius: 0 var(--r-lg) var(--r-lg) 0;
+  padding: 0.85rem 1.1rem;
+  font-size: 12.5px;
+  color: var(--blue-600);
+  line-height: 1.65;
+  margin-bottom: 2rem;
+}
+.art13 b { color: var(--blue-800); font-weight: 500; }
+.art13-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.a13pill {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(55,138,221,0.15);
+  color: var(--blue-600);
+  border: 0.5px solid var(--blue-100);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+@media (prefers-color-scheme: dark) {
+  .a13pill { background: rgba(55,138,221,0.25); color: var(--blue-600); border-color: var(--blue-400); }
+  .p-label { color: var(--text-3); }
+  .sec-label { color: var(--text-3); }
+  .output-note strong { color: var(--text); }
+}
+
+/* ── Footer ── */
+footer {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 0.9rem 2rem;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+@media (max-width: 640px) {
+  .page-header, .patient-bar, .main { padding-left: 1rem; padding-right: 1rem; }
+  .header-left h1 { font-size: 22px; }
+  .model-tag { align-items: flex-start; }
+  .leg-note { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <h1>Attention Heatmap</h1>
+      <p>Longitudinal UC flare risk · 8-week wearable &amp; lab trajectory</p>
+    </div>
+    <div class="model-tag">
+      <span class="model-pill"><i class="ti ti-cpu" style="font-size:12px;" aria-hidden="true"></i> UCFlareNet v2.1</span>
+      <span class="model-pill"><i class="ti ti-calendar" style="font-size:12px;" aria-hidden="true"></i> Trained 2018–2023</span>
+      <span class="model-pill"><i class="ti ti-users" style="font-size:12px;" aria-hidden="true"></i> n = 4,840 patients</span>
+    </div>
+  </div>
+</header>
+
+<div class="patient-bar">
+  <div class="patient-inner">
+    <span class="p-label">Patient</span>
+    <span class="p-chip">ID UC-2024-0471</span>
+    <span class="p-chip">Female · 38 yrs</span>
+    <span class="p-chip">Monitoring: Mar 4 – Apr 22</span>
+    <span class="p-chip">Prior biologic failure</span>
+  </div>
+</div>
+
+<main class="main">
+
+  <!-- Output -->
+  <div class="card">
+    <div class="sec-label">Model output</div>
+    <div class="output-badge">
+      <i class="ti ti-alert-triangle" style="font-size:16px;" aria-hidden="true"></i>
+      High flare risk — 14-day window
+    </div>
+    <p class="output-note">The heatmap below shows <strong>which weeks</strong> most influenced this prediction. Brighter cells = higher attention weight. Click any week column to inspect contributing features.</p>
+  </div>
+
+  <!-- Heatmap -->
+  <div class="card">
+    <div class="sec-label">Longitudinal attention heatmap</div>
+
+    <div class="legend-strip">
+      <div class="leg-item"><div class="leg-swatch" style="background:#D85A30;"></div> High attention</div>
+      <div class="leg-item"><div class="leg-swatch" style="background:#EF9F27;opacity:0.75;"></div> Medium attention</div>
+      <div class="leg-item"><div class="leg-swatch" style="background:#D3D1C7;opacity:0.55;"></div> Low attention</div>
+      <span class="leg-note"><i class="ti ti-hand-click" style="font-size:13px;vertical-align:-2px;" aria-hidden="true"></i> Click a column to inspect</span>
+    </div>
+
+    <div class="heatmap-scroll">
+      <table class="heatmap-table" id="heatmap-table" aria-label="Attention heatmap of 4 clinical features across 8 weeks, with highest attention on weeks 6 and 7"></table>
+    </div>
+
+    <div class="detail-panel" id="detail-panel">
+      <div class="detail-title" id="detail-title">Click any week to inspect contributing features</div>
+      <div class="detail-feats" id="detail-feats"></div>
+      <div class="detail-attn" id="detail-attn"></div>
+    </div>
+  </div>
+
+  <!-- Calprotectin trajectory -->
+  <div class="card">
+    <div class="sec-label">Calprotectin trajectory (µg/g) — 8 weeks</div>
+    <div class="traj-wrap">
+      <canvas id="trajChart" role="img" aria-label="Line chart of calprotectin rising from 210 in week 1 to 680 in week 8, with shaded attention overlay highest at weeks 6 and 7">Calprotectin: W1=210, W2=240, W3=280, W4=310, W5=420, W6=560, W7=640, W8=680 µg/g.</canvas>
+    </div>
+  </div>
+
+  <!-- Article 13 -->
+  <div class="art13">
+    <b>Article 13 — model version &amp; training scope disclosure:</b> This prediction was generated by <b>UCFlareNet v2.1</b>, trained on 8-week rolling windows of weekly lab and wearable data from a 2018–2023 cohort (n = 4,840 UC patients). The model expects a minimum 6-week input window; predictions with fewer weeks may have reduced reliability. Clinicians should verify that the patient's monitoring data distribution matches the training scope before acting on this output.
+    <div class="art13-pills">
+      <span class="a13pill"><i class="ti ti-cpu" style="font-size:11px;" aria-hidden="true"></i> UCFlareNet v2.1</span>
+      <span class="a13pill"><i class="ti ti-calendar" style="font-size:11px;" aria-hidden="true"></i> Training: 2018–2023</span>
+      <span class="a13pill"><i class="ti ti-clock" style="font-size:11px;" aria-hidden="true"></i> Window: 8 weeks</span>
+      <span class="a13pill"><i class="ti ti-users" style="font-size:11px;" aria-hidden="true"></i> n = 4,840</span>
+      <span class="a13pill"><i class="ti ti-shield-check" style="font-size:11px;" aria-hidden="true"></i> Clinician override applies</span>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  For clinical decision support only · UCFlareNet v2.1 · Always apply clinical judgment
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const weeks   = ['W1','W2','W3','W4','W5','W6','W7','W8'];
+const dates   = ['Mar 4','Mar 11','Mar 18','Mar 25','Apr 1','Apr 8','Apr 15','Apr 22'];
+const attnW   = [0.04, 0.05, 0.06, 0.08, 0.14, 0.22, 0.28, 0.13];
+const isDark  = matchMedia('(prefers-color-scheme: dark)').matches;
+
+const features = [
+  { name: 'Calprotectin (µg/g)', vals: [210,240,280,310,420,560,640,680], lo:0, hi:800 },
+  { name: 'CRP (mg/L)',          vals: [4,5,7,9,14,20,24,28],             lo:0, hi:35  },
+  { name: 'Stool freq / day',    vals: [2,2,3,3,4,5,6,6],                 lo:0, hi:8   },
+  { name: 'Sleep score',         vals: [78,75,72,68,61,55,50,47],         lo:30, hi:100 },
+];
+
+const segDetails = [
+  { feats: [{t:'Calprotectin 210',l:'low'},{t:'CRP 4 mg/L',l:'low'},{t:'Stool 2/day',l:'low'}] },
+  { feats: [{t:'Calprotectin 240',l:'low'},{t:'CRP 5 mg/L',l:'low'},{t:'Stool 2/day',l:'low'}] },
+  { feats: [{t:'Calprotectin rising → 280',l:'med'},{t:'CRP 7 mg/L',l:'med'},{t:'Stool 3/day',l:'low'}] },
+  { feats: [{t:'Calprotectin 310',l:'med'},{t:'CRP 9 mg/L',l:'med'},{t:'Sleep declining → 68',l:'med'}] },
+  { feats: [{t:'Calprotectin surge → 420',l:'high'},{t:'CRP 14 mg/L',l:'high'},{t:'Stool 4/day',l:'med'},{t:'Sleep 61',l:'med'}] },
+  { feats: [{t:'Calprotectin 560 µg/g',l:'high'},{t:'CRP 20 mg/L',l:'high'},{t:'Stool 5/day',l:'high'},{t:'Sleep 55',l:'high'}] },
+  { feats: [{t:'Calprotectin 640 µg/g',l:'high'},{t:'CRP 24 mg/L',l:'high'},{t:'Stool 6/day',l:'high'},{t:'Sleep 50',l:'high'}] },
+  { feats: [{t:'Calprotectin 680 µg/g',l:'high'},{t:'CRP 28 mg/L',l:'high'},{t:'Stool 6/day',l:'high'},{t:'Sleep 47',l:'high'}] },
+];
+
+function cellBg(feat, val) {
+  const pct = (val - feat.lo) / (feat.hi - feat.lo);
+  if (isDark) {
+    if (pct > 0.70) return { bg: 'rgba(216,90,48,0.55)',   fg: '#FAECE7' };
+    if (pct > 0.45) return { bg: 'rgba(239,159,39,0.50)',  fg: '#FAC775' };
+    if (pct > 0.25) return { bg: 'rgba(250,199,117,0.30)', fg: '#EF9F27' };
+    return { bg: 'rgba(180,178,169,0.18)', fg: '#8A8578' };
+  }
+  if (pct > 0.70) return { bg: 'rgba(216,90,48,0.80)',   fg: '#4A1B0C' };
+  if (pct > 0.45) return { bg: 'rgba(239,159,39,0.70)',  fg: '#412402' };
+  if (pct > 0.25) return { bg: 'rgba(250,199,117,0.55)', fg: '#633806' };
+  return { bg: 'rgba(211,209,199,0.40)', fg: '#5F5E5A' };
+}
+
+function attnBg(w) {
+  if (isDark) {
+    if (w >= 0.22) return { bg: '#993C1D', fg: '#FAECE7' };
+    if (w >= 0.12) return { bg: '#854F0B', fg: '#FAC775' };
+    if (w >= 0.07) return { bg: '#633806', fg: '#EF9F27' };
+    return { bg: 'rgba(180,178,169,0.22)', fg: '#8A8578' };
+  }
+  if (w >= 0.22) return { bg: '#D85A30', fg: '#FAECE7' };
+  if (w >= 0.12) return { bg: '#EF9F27', fg: '#412402' };
+  if (w >= 0.07) return { bg: '#FAC775', fg: '#633806' };
+  return { bg: 'rgba(211,209,199,0.5)', fg: '#5F5E5A' };
+}
+
+let selectedCol = 6;
+
+function buildTable() {
+  const tbl = document.getElementById('heatmap-table');
+  tbl.innerHTML = '';
+
+  const thead = tbl.createTHead();
+  const hrow = thead.insertRow();
+  const th0 = document.createElement('th');
+  th0.className = 'feat-label-th';
+  hrow.appendChild(th0);
+  weeks.forEach((w, i) => {
+    const th = document.createElement('th');
+    th.innerHTML = `<div>${w}</div><div style="font-weight:400;font-size:10px;color:var(--text-3);">${dates[i]}</div>`;
+    hrow.appendChild(th);
+  });
+
+  const tbody = tbl.createTBody();
+  features.forEach(feat => {
+    const row = tbody.insertRow();
+    const td0 = row.insertCell();
+    td0.className = 'feat-label-td';
+    td0.textContent = feat.name;
+    feat.vals.forEach((v, i) => {
+      const td = row.insertCell();
+      const c = cellBg(feat, v);
+      td.style.background = c.bg;
+      td.style.color = c.fg;
+      td.textContent = v;
+      td.dataset.col = i;
+      if (i === selectedCol) td.classList.add('col-selected');
+      td.addEventListener('click', () => selectCol(i));
+    });
+  });
+
+  const divRow = tbody.insertRow();
+  divRow.className = 'divider-row';
+  for (let i = 0; i <= weeks.length; i++) divRow.insertCell();
+
+  const attnRow = tbody.insertRow();
+  const atd0 = attnRow.insertCell();
+  atd0.className = 'attn-label-td';
+  atd0.textContent = 'Attention';
+  attnW.forEach((w, i) => {
+    const td = attnRow.insertCell();
+    td.className = 'attn-td';
+    const c = attnBg(w);
+    td.style.background = c.bg;
+    td.style.color = c.fg;
+    td.textContent = Math.round(w * 100) + '%';
+    td.dataset.col = i;
+    if (i === selectedCol) td.classList.add('col-selected');
+    td.addEventListener('click', () => selectCol(i));
+  });
+}
+
+function selectCol(i) {
+  selectedCol = i;
+  document.querySelectorAll('[data-col]').forEach(el => {
+    el.classList.toggle('col-selected', parseInt(el.dataset.col) === i);
+  });
+  const d = segDetails[i];
+  document.getElementById('detail-title').textContent =
+    `${weeks[i]} · ${dates[i]} — contributing features`;
+  const featsEl = document.getElementById('detail-feats');
+  featsEl.innerHTML = '';
+  d.feats.forEach(f => {
+    const span = document.createElement('span');
+    span.className = `dfeat d-${f.l}`;
+    span.textContent = f.t;
+    featsEl.appendChild(span);
+  });
+  const w = attnW[i];
+  const pct = Math.round(w * 100);
+  const desc = w >= 0.22 ? 'highest influence on prediction'
+             : w >= 0.12 ? 'moderate influence'
+             : 'low influence';
+  document.getElementById('detail-attn').innerHTML =
+    `Attention weight: <b>${pct}%</b> — ${desc}`;
+  updateChart(i);
+}
+
+const attnPlugin = {
+  id: 'attnOverlay',
+  afterDraw(chart) {
+    const { ctx, chartArea: { top, bottom, left, right }, scales: { x } } = chart;
+    attnW.forEach((w, i) => {
+      const xMin = x.getPixelForValue(i - 0.5);
+      const xMax = x.getPixelForValue(i + 0.5);
+      const alpha = w * 2.2;
+      ctx.save();
+      ctx.fillStyle = `rgba(216,90,48,${Math.min(alpha, 0.35)})`;
+      ctx.fillRect(xMin, top, xMax - xMin, bottom - top);
+      ctx.restore();
+    });
+  }
+};
+
+let selectedLinePlugin = {
+  id: 'selectedLine',
+  afterDraw(chart) {
+    const { ctx, chartArea: { top, bottom }, scales: { x } } = chart;
+    const xPos = x.getPixelForValue(selectedCol);
+    ctx.save();
+    ctx.strokeStyle = '#378ADD';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.moveTo(xPos, top);
+    ctx.lineTo(xPos, bottom);
+    ctx.stroke();
+    ctx.restore();
+  }
+};
+
+const trajCtx = document.getElementById('trajChart').getContext('2d');
+const trajChart = new Chart(trajCtx, {
+  type: 'line',
+  plugins: [attnPlugin, selectedLinePlugin],
+  data: {
+    labels: dates,
+    datasets: [{
+      label: 'Calprotectin µg/g',
+      data: [210,240,280,310,420,560,640,680],
+      borderColor: '#D85A30',
+      backgroundColor: 'rgba(216,90,48,0.08)',
+      fill: true,
+      tension: 0.35,
+      pointRadius: 5,
+      pointBackgroundColor: '#D85A30',
+      pointBorderColor: isDark ? '#1A1916' : '#fff',
+      pointBorderWidth: 2,
+      borderWidth: 2.5,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => `Calprotectin: ${ctx.parsed.y} µg/g · Attention: ${Math.round(attnW[ctx.dataIndex]*100)}%`
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: { font: { family: "'Syne', sans-serif", size: 11 }, color: isDark ? '#C8C3B8' : '#9A9790', maxRotation: 0 },
+        grid: { color: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }
+      },
+      y: {
+        min: 0, max: 800,
+        ticks: { font: { family: "'DM Mono', monospace", size: 10 }, color: isDark ? '#C8C3B8' : '#9A9790', stepSize: 200 },
+        grid: { color: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }
+      }
+    },
+    animation: { duration: 300 }
+  }
+});
+
+const thresholdLine = {
+  id: 'threshLine',
+  afterDraw(chart) {
+    const { ctx, chartArea: { left, right }, scales: { y } } = chart;
+    const yPos = y.getPixelForValue(200);
+    ctx.save();
+    ctx.strokeStyle = isDark ? 'rgba(29,158,117,0.6)' : 'rgba(15,110,86,0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(left, yPos);
+    ctx.lineTo(right, yPos);
+    ctx.stroke();
+    ctx.fillStyle = isDark ? '#5DCAA5' : '#0F6E56';
+    ctx.font = '10px Syne, sans-serif';
+    ctx.fillText('Normal < 200', left + 4, yPos - 4);
+    ctx.restore();
+  }
+};
+trajChart.config.plugins.push(thresholdLine);
+
+function updateChart(col) {
+  if (trajChart) trajChart.update();
+}
+
+buildTable();
+selectCol(6);
+</script>
+</body>
+</html>
